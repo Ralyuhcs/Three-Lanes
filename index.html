@@ -150,14 +150,105 @@ button{min-height:42px}
 #onlineWaiting[hidden]{display:none}
 #onlineWaiting .mini-window{max-width:420px;text-align:center}
 @media(max-width:600px){.online-actions button{flex:1 1 auto}.online-actions input{flex:1 1 120px}}
-</style></head><body><main class="shell"><header class="top"><div><h1>THREE LANES</h1><div class="muted">ADVENTURING DECKS · MONOCHROME · CHARACTER CARD EDITION</div></div><div style="display:flex;gap:8px;align-items:center"><span id="turnInfo" class="pill"></span><button id="restart">NEW GAME</button></div></header><section class="battle"><div class="status"><div><h2>GOBLIN OPPONENT</h2><div class="deck-stack"><span class="deck-icon"></span><span class="deck-count" id="enemyDeckCount"></span><span class="muted" id="enemyDeck"></span></div></div><div class="hearts" id="enemyHearts"></div></div><div class="sectionlabel">OPPONENT FIELD</div><div class="slots" id="enemyBoard"></div><div class="environment"><div class="envslot" id="sharedEnv" aria-label="Shared environment slot"></div></div><div class="sectionlabel">YOUR FIELD</div><div class="slots" id="playerBoard"></div><div class="status"><div><h2>HUMAN PLAYER</h2><div class="deck-stack"><span class="deck-icon"></span><span class="deck-count" id="playerDeckCount"></span><span class="muted" id="playerDeck"></span></div></div><div class="hearts" id="playerHearts"></div></div></section><section class="hand"><h2>YOUR HAND <span class="muted" id="handCount"></span></h2><div class="handcards" id="hand"></div><div class="controls"><button id="moveElf" title="Move an Elf one lane">MOVE ELF</button><button id="fuse">FUSE</button><button id="cancel">CANCEL SELECTION</button><button id="end">END TURN</button></div><div class="message" id="message" role="status"></div></section></main><button id="guideToggle" class="guide-toggle" aria-expanded="false" aria-controls="guidePanel">☰ CARD GUIDE</button><div id="guideBackdrop" class="guide-backdrop" hidden></div><aside id="guidePanel" class="guide-panel" aria-hidden="true"><div class="guide-head"><h2>CARD ABILITY GUIDE</h2><button id="guideClose" aria-label="Close card guide">✕ CLOSE</button></div><p class="muted">Adventurers, monsters, spells, equipment, and environments.</p><div class="guide-filters" id="guideFilters" role="group" aria-label="Filter cards by type"></div><div class="guide-count" id="guideCount" aria-live="polite"></div><div class="guide-grid" id="abilityGuide"></div></aside><button id="howToggle" class="side-toggle how-toggle" aria-expanded="false" aria-controls="howPanel">? HOW TO PLAY</button>
-<button id="trackerToggle" class="side-toggle tracker-toggle" aria-expanded="false" aria-controls="trackerPanel">☷ ACTION TRACKER</button>
+</style><style>
+/* Touch drag uses a floating preview and highlighted drop targets. */
+.handcards .card,#playerBoard .card{touch-action:none;-webkit-user-select:none;user-select:none}
+.touch-drag-ghost{position:fixed!important;z-index:9999!important;pointer-events:none!important;opacity:.82;transform:rotate(-3deg);box-shadow:0 12px 30px #0005!important}
+.touch-drop-target{outline:3px solid #111!important;outline-offset:2px;background:#ddd!important}
+#mobileFuse{display:none!important}
+</style><style>
+/* v3.1 compact mobile arena and overlapping hand */
+.side-menu{position:fixed;right:0;top:42%;z-index:28;display:flex;align-items:flex-start;flex-direction:row-reverse;gap:0;filter:drop-shadow(-2px 3px 2px #0002)}
+.side-menu-tab{position:relative!important;inset:auto!important;display:flex;flex-direction:column;align-items:center;gap:2px;background:#111!important;color:#fff!important;border:2px solid #111!important;border-right:0!important;border-radius:8px 0 0 8px!important;padding:13px 7px!important;min-width:37px;min-height:70px;writing-mode:vertical-rl;font-size:11px!important;font-weight:900;letter-spacing:1px;box-shadow:none!important}
+.side-menu-items{background:#fff;border:2px solid #111;border-right:0;padding:8px;display:flex;flex-direction:column;gap:7px;width:165px}
+.side-menu-items[hidden]{display:none!important}
+.side-menu-items .guide-toggle,.side-menu-items .side-toggle{position:static!important;display:block!important;width:100%;padding:10px 6px!important;font-size:11px!important;min-height:44px;box-shadow:none!important;text-align:left;white-space:normal}
+@media(max-width:800px){
+ .shell{padding:7px!important}
+ .battle{margin:7px auto!important}
+ .top{padding-bottom:6px!important;gap:4px}
+ .top h1{font-size:16px!important;letter-spacing:2px}
+ .top .muted{font-size:9px}
+ .status{margin:4px 0!important;gap:5px!important}
+ .status h2{font-size:10px!important;margin:0 0 2px}
+ .hearts{font-size:17px!important;letter-spacing:1px!important}
+ .deck-stack{font-size:10px!important;gap:4px}
+ .deck-icon{width:15px!important;height:19px!important}
+ .sectionlabel{margin:4px 0 3px!important;font-size:9px!important}
+ .slots{gap:5px!important}
+ .slot{height:100px!important;padding:2px!important}
+ .slot .card{padding:3px 2px!important;box-shadow:none!important}
+ .slot .card .name{margin-top:4px!important;font-size:10px!important;line-height:1.1}
+ .slot .card .ability{font-size:8px!important;line-height:1.05}
+ .slot .card .stats{font-size:9px!important}
+ .slot .card:before{width:19px!important;height:19px!important;top:-5px!important;right:-4px!important}
+ .environment{margin:5px 0!important;padding:5px 0!important;gap:3px!important}
+ .envslot{min-height:34px!important;padding:3px!important;font-size:10px!important}
+ .envslot strong{font-size:11px!important}
+ .hand{padding-top:7px!important}
+ .hand h2{margin:0 0 6px;font-size:11px}
+ .handcards{display:flex!important;flex-wrap:nowrap!important;overflow:visible!important;scroll-snap-type:none!important;padding:6px 8px 8px 2px!important;gap:0!important;min-height:125px!important;isolation:isolate}
+ .handcards .card{flex:1 1 0!important;width:auto!important;min-width:0!important;max-width:132px!important;height:123px!important;min-height:123px!important;margin-right:0!important;margin-left:0!important;scroll-snap-align:none!important;transition:transform .14s ease;z-index:1}
+ .handcards .card + .card{margin-left:clamp(-90px, -7vw, -18px)!important}
+ .handcards .card:hover,.handcards .card:focus-visible,.handcards .card.selected{z-index:12!important;transform:translateY(-7px)}
+ .handcards .card .name{font-size:10px!important;overflow-wrap:anywhere}
+ .handcards .card .ability{font-size:8px!important;line-height:1.1}
+ .handcards .card .tag{font-size:8px!important}
+ .controls{margin:7px 0!important}
+ .controls button{padding:6px 8px!important;min-height:38px}
+ .message{padding:7px!important;margin:6px 0!important;min-height:30px}
+}
+@media(max-width:390px){.slot{height:91px!important}.handcards .card{height:114px!important;min-height:114px!important}.handcards .card + .card{margin-left:-30px!important}.hearts{font-size:15px!important}}
+</style><style>
+/* Nonblocking online turn indicator: keeps the battlefield fully visible. */
+#onlineWaiting.online-turn-indicator{
+ position:fixed;left:8px;top:42%;right:auto;bottom:auto;inset:auto;
+ display:flex;align-items:center;gap:8px;width:max-content;max-width:min(185px,46vw);
+ padding:9px 11px;border:1px solid rgba(30,30,30,.3);border-left:3px solid #222;
+ border-radius:0 8px 8px 0;background:rgba(245,245,245,.72);color:#171717;
+ box-shadow:0 2px 10px rgba(0,0,0,.07);backdrop-filter:blur(3px);
+ z-index:19;pointer-events:none;justify-content:flex-start;text-align:left;
+}
+#onlineWaiting.online-turn-indicator[hidden]{display:none!important}
+#onlineWaiting .online-turn-dot{height:8px;width:8px;border-radius:50%;background:#555;flex:0 0 auto}
+#onlineWaiting strong{font-size:10px;letter-spacing:.5px;display:block}
+#onlineWaiting small{font-size:9px;display:block;line-height:1.25;opacity:.75}
+#onlineLeave{width:100%;border:1px solid #999;background:#fff;color:#555;font-size:11px;min-height:44px;margin-top:6px}
+#onlineLeave[hidden]{display:none!important}
+@media(max-width:600px){
+ #onlineWaiting.online-turn-indicator{left:0;top:43%;max-width:128px;padding:6px 7px;gap:5px;background:rgba(245,245,245,.62)}
+ #onlineWaiting strong{font-size:9px}
+ #onlineWaiting small{font-size:8px}
+}
+</style>
+<style>
+/* Lightweight board feedback, including remotely synchronized moves. */
+@keyframes tlSummon{0%{opacity:.1;transform:translateY(-15px) scale(.82)}65%{opacity:1;transform:translateY(3px) scale(1.05)}100%{transform:none}}
+@keyframes tlStrike{0%,100%{transform:translateX(0)}40%{transform:translateX(13px) rotate(2deg)}70%{transform:translateX(-4px)}}
+@keyframes tlHurt{0%,100%{transform:translateX(0);filter:none}20%,60%{transform:translateX(-6px);filter:brightness(.75)}40%,80%{transform:translateX(6px);filter:brightness(1.3)}}
+@keyframes tlDeath{0%{opacity:1;transform:scale(1);filter:grayscale(0)}100%{opacity:0;transform:scale(.55) rotate(-8deg);filter:grayscale(1)}}
+.tl-summon{animation:tlSummon .46s ease-out both}
+.tl-attack{animation:tlStrike .42s ease-in-out both}
+.tl-damage{animation:tlHurt .43s ease-in-out both}
+.tl-death-ghost{position:fixed!important;z-index:55;pointer-events:none!important;animation:tlDeath .52s ease-in forwards;transform-origin:center}
+@media(max-width:800px){
+ .side-menu{top:6px!important;right:6px!important;flex-direction:column!important;align-items:flex-end!important;filter:none!important}
+ .side-menu-tab{writing-mode:horizontal-tb!important;flex-direction:row!important;border:2px solid #111!important;border-radius:7px!important;min-height:35px!important;min-width:66px!important;padding:7px 9px!important;font-size:11px!important}
+ .side-menu-items{margin-top:3px;border:2px solid #111!important;border-radius:7px!important;box-shadow:0 5px 15px #0003;max-height:70vh;overflow-y:auto}
+ .top{padding-right:70px!important}
+}
+@media(prefers-reduced-motion:reduce){
+ .tl-summon,.tl-attack,.tl-damage,.tl-death-ghost{animation:none!important}
+ .tl-death-ghost{display:none!important}
+}
+</style></head><body><main class="shell"><header class="top"><div><h1>THREE LANES</h1><div class="muted">ADVENTURING DECKS · MONOCHROME · CHARACTER CARD EDITION</div></div><div style="display:flex;gap:8px;align-items:center"><span id="turnInfo" class="pill"></span><button id="restart">NEW GAME</button></div></header><section class="battle"><div class="status"><div><h2>GOBLIN OPPONENT</h2><div class="deck-stack"><span class="deck-icon"></span><span class="deck-count" id="enemyDeckCount"></span><span class="muted" id="enemyDeck"></span></div></div><div class="hearts" id="enemyHearts"></div></div><div class="sectionlabel">OPPONENT FIELD</div><div class="slots" id="enemyBoard"></div><div class="environment"><div class="envslot" id="sharedEnv" aria-label="Shared environment slot"></div></div><div class="sectionlabel">YOUR FIELD</div><div class="slots" id="playerBoard"></div><div class="status"><div><h2>HUMAN PLAYER</h2><div class="deck-stack"><span class="deck-icon"></span><span class="deck-count" id="playerDeckCount"></span><span class="muted" id="playerDeck"></span></div></div><div class="hearts" id="playerHearts"></div></div></section><section class="hand"><h2>YOUR HAND <span class="muted" id="handCount"></span></h2><div class="handcards" id="hand"></div><div class="controls"><button id="cancel">CANCEL SELECTION</button><button id="end">END TURN</button></div><div class="message" id="message" role="status"></div></section></main><div id="sideMenu" class="side-menu" aria-label="Game information"><button id="sideMenuTab" class="side-menu-tab" type="button" aria-expanded="false" aria-controls="sideMenuItems">☰ <span>MENU</span></button><div id="sideMenuItems" class="side-menu-items" hidden><button id="guideToggle" class="guide-toggle" aria-expanded="false" aria-controls="guidePanel">☰ CARD GUIDE</button><div id="guideBackdrop" class="guide-backdrop" hidden></div><aside id="guidePanel" class="guide-panel" aria-hidden="true"><div class="guide-head"><h2>CARD ABILITY GUIDE</h2><button id="guideClose" aria-label="Close card guide">✕ CLOSE</button></div><p class="muted">Adventurers, monsters, spells, equipment, and environments.</p><div class="guide-filters" id="guideFilters" role="group" aria-label="Filter cards by type"></div><div class="guide-count" id="guideCount" aria-live="polite"></div><div class="guide-grid" id="abilityGuide"></div></aside><button id="howToggle" class="side-toggle how-toggle" aria-expanded="false" aria-controls="howPanel">? HOW TO PLAY</button>
+<button id="trackerToggle" class="side-toggle tracker-toggle" aria-expanded="false" aria-controls="trackerPanel">☷ ACTION TRACKER</button><button id="onlineLeave" type="button" hidden>LEAVE ONLINE MATCH</button></div></div>
 <aside id="howPanel" class="guide-panel extra-panel" aria-hidden="true" role="dialog" aria-label="How to play">
 <div class="guide-head"><h2>HOW TO PLAY</h2><button id="howClose">✕ CLOSE</button></div>
 <p class="footer">Choose your faction on the opening screen. Start with 3 cards; your hand can grow without limit. Each deck contains 20 cards, with at most 4 copies of a card.  Drag a card from your hand onto an empty friendly lane. Drag an Elf on your field into an adjacent empty lane to move it, or drag one friendly creature onto another to fuse. Drag equipment onto any adventurer, or a Potion onto an injured ally. Drag environments onto the shared environment slot; Dungeon rewards its owner once per turn when a friendly creature is defeated: draw a card or give a random surviving ally +1 permanent ATK. Each new environment replaces the previous one for BOTH sides. A coin flip decides the first player. The first player cannot attack on the opening turn; afterward newly played creatures can attack immediately. Click your ready creature and then an enemy card to attack. Click an EMPTY enemy lane in range to attack the opponent's hearts (only if no enemy is within your attack range). You can also click the hearts directly. Click END TURN when ready. On phones, tap a card and then tap its destination if dragging is difficult.</p></aside>
 <aside id="trackerPanel" class="guide-panel extra-panel" aria-hidden="true" role="dialog" aria-label="Action tracker">
 <div class="guide-head"><h2>ACTION TRACKER</h2><button id="trackerClose">✕ CLOSE</button></div>
-<p class="muted">Latest battle events appear first.</p><div class="log" id="log" aria-live="polite"></div></aside><div id="cardTooltip" class="card-tooltip" role="tooltip" hidden></div><section id="onlineWaiting" hidden><div class="mini-window"><h2 id="onlineWaitTitle">WAITING FOR OPPONENT</h2><p id="onlineWaitText">Your opponent is making their move.</p><button type="button" id="onlineLeave">LEAVE ONLINE MATCH</button></div></section><section id="passOverlay" class="mini-overlay" hidden><div class="mini-window" style="text-align:center"><h2 id="passTitle">PASS TO PLAYER 2</h2><p>Hand the device to the next player. Your opponent's hand stays hidden.</p><button id="passReady">I'M READY · SHOW MY HAND</button></div></section><section id="dungeonRewardOverlay" class="mini-overlay" hidden><div class="mini-window" style="text-align:center"><h2>☠ THE DUNGEON FEEDS</h2><p id="dungeonRewardMessage"></p><div class="equipment-choices"><button id="dungeonDraw" type="button">DRAW 1 CARD</button><button id="dungeonBuff" type="button">RANDOM ALLY +1 ATK</button></div><p class="muted">Only one Dungeon reward per turn. The attack bonus lasts while that creature stays on the field.</p></div></section><section id="equipmentOverlay" class="mini-overlay" hidden><div class="mini-window"><h2>HUMAN · FIND EQUIPMENT</h2><p>Choose one equipment card from your draw deck to add to your hand.</p><div id="equipmentChoices" class="equipment-choices"></div><button id="equipmentSkip">SKIP</button></div></section><section id="gameOverOverlay" class="mini-overlay" role="dialog" aria-modal="true" aria-labelledby="gameOverTitle" hidden><div class="mini-window" style="text-align:center;max-width:440px"><div style="font-size:44px;margin:6px">🏆</div><h2 id="gameOverTitle">GAME OVER</h2><p id="gameOverResult" style="font-weight:900;font-size:19px"></p><p id="gameOverDetails"></p><button id="gameOverNewGame">PLAY AGAIN →</button></div></section><section id="coinOverlay" class="mini-overlay" hidden><div class="mini-window" style="text-align:center"><h2>◉ COIN FLIP</h2><div style="font-size:46px;margin:16px">◐</div><h3 id="coinResult"></h3><p id="coinDetails"></p><button id="coinContinue">BEGIN MATCH →</button></div></section><section id="startOverlay" class="start-overlay" role="dialog" aria-modal="true" aria-labelledby="startTitle"><div class="start-window"><h2 id="startTitle">✦ CHOOSE YOUR DECK</h2><p class="muted">Select your deck to begin. 20 cards per deck · maximum 4 copies of any card · 3 cards to start · unlimited hand size afterward.</p><div class="deck-options"><button class="deck-choice" id="chooseHuman"><span class="symbol">♙</span><strong>ADVENTURER DECK</strong><span class="description">Transform Humans into Fighters, Wizards, Bards, Archers, and Rogues. Recruit allies and build defenses.</span><span class="select-action">20 CARDS · SELECT →</span></button><button class="deck-choice" id="chooseGoblin"><span class="symbol">♟</span><strong>GOBLIN DECK</strong><span class="description">Summon Goblins, fuse Hobgoblins and Riders, use Goblin Tactics and disrupt the opponent.</span><span class="select-action">20 CARDS · SELECT →</span></button><button class="deck-choice" id="chooseDungeon"><span class="symbol">☠</span><strong>DUNGEON DECK</strong><span class="description">Fuse Skeletons into a Necromancer that strengthens your undead. Slimes grow and split. Dungeon converts fallen creatures into card draws or permanent attack bonuses.</span><span class="select-action">20 CARDS · SELECT →</span></button></div><div class="mode-picker"><strong>GAME MODE</strong><label><input type="radio" name="gameMode" value="pve" checked> PvE · Versus computer</label><label><input type="radio" name="gameMode" value="pvp"> PvP · Local two-player (pass and play)</label>
+<p class="muted">Latest battle events appear first.</p><div class="log" id="log" aria-live="polite"></div></aside><div id="cardTooltip" class="card-tooltip" role="tooltip" hidden></div><div id="onlineWaiting" class="online-turn-indicator" hidden role="status" aria-live="polite"><span class="online-turn-dot" aria-hidden="true"></span><div><strong id="onlineWaitTitle">OPPONENT’S TURN</strong><small id="onlineWaitText">Watching the battlefield</small></div></div><section id="passOverlay" class="mini-overlay" hidden><div class="mini-window" style="text-align:center"><h2 id="passTitle">PASS TO PLAYER 2</h2><p>Hand the device to the next player. Your opponent's hand stays hidden.</p><button id="passReady">I'M READY · SHOW MY HAND</button></div></section><section id="dungeonRewardOverlay" class="mini-overlay" hidden><div class="mini-window" style="text-align:center"><h2>☠ THE DUNGEON FEEDS</h2><p id="dungeonRewardMessage"></p><div class="equipment-choices"><button id="dungeonDraw" type="button">DRAW 1 CARD</button><button id="dungeonBuff" type="button">RANDOM ALLY +1 ATK</button></div><p class="muted">Only one Dungeon reward per turn. The attack bonus lasts while that creature stays on the field.</p></div></section><section id="equipmentOverlay" class="mini-overlay" hidden><div class="mini-window"><h2>HUMAN · FIND EQUIPMENT</h2><p>Choose one equipment card from your draw deck to add to your hand.</p><div id="equipmentChoices" class="equipment-choices"></div><button id="equipmentSkip">SKIP</button></div></section><section id="gameOverOverlay" class="mini-overlay" role="dialog" aria-modal="true" aria-labelledby="gameOverTitle" hidden><div class="mini-window" style="text-align:center;max-width:440px"><div style="font-size:44px;margin:6px">🏆</div><h2 id="gameOverTitle">GAME OVER</h2><p id="gameOverResult" style="font-weight:900;font-size:19px"></p><p id="gameOverDetails"></p><button id="gameOverNewGame">PLAY AGAIN →</button></div></section><section id="coinOverlay" class="mini-overlay" hidden><div class="mini-window" style="text-align:center"><h2>◉ COIN FLIP</h2><div style="font-size:46px;margin:16px">◐</div><h3 id="coinResult"></h3><p id="coinDetails"></p><button id="coinContinue">BEGIN MATCH →</button></div></section><section id="startOverlay" class="start-overlay" role="dialog" aria-modal="true" aria-labelledby="startTitle"><div class="start-window"><h2 id="startTitle">✦ CHOOSE YOUR DECK</h2><p class="muted">Select your deck to begin. 20 cards per deck · maximum 4 copies of any card · 3 cards to start · unlimited hand size afterward.</p><div class="deck-options"><button class="deck-choice" id="chooseHuman"><span class="symbol">♙</span><strong>ADVENTURER DECK</strong><span class="description">Transform Humans into Fighters, Wizards, Bards, Archers, and Rogues. Recruit allies and build defenses.</span><span class="select-action">20 CARDS · SELECT →</span></button><button class="deck-choice" id="chooseGoblin"><span class="symbol">♟</span><strong>GOBLIN DECK</strong><span class="description">Summon Goblins, fuse Hobgoblins and Riders, use Goblin Tactics and disrupt the opponent.</span><span class="select-action">20 CARDS · SELECT →</span></button><button class="deck-choice" id="chooseDungeon"><span class="symbol">☠</span><strong>DUNGEON DECK</strong><span class="description">Fuse Skeletons into a Necromancer that strengthens your undead. Slimes grow and split. Dungeon converts fallen creatures into card draws or permanent attack bonuses.</span><span class="select-action">20 CARDS · SELECT →</span></button></div><div class="mode-picker"><strong>GAME MODE</strong><label><input type="radio" name="gameMode" value="pve" checked> PvE · Versus computer</label><label><input type="radio" name="gameMode" value="pvp"> PvP · Local two-player (pass and play)</label>
 <label><input type="radio" name="gameMode" value="online"> Online · Private room code</label></div><div id="onlineLobby" class="online-lobby" hidden>
 <strong>ONLINE MATCH · TWO DEVICES</strong>
 <p class="muted">Both players must open this page online. Host creates a room; guest enters its six-digit code. Choose your deck before hosting or joining.</p>
@@ -257,7 +348,7 @@ function dealOpeningHand(side){
  draw(side,2);
  p.hand=shuffle(p.hand);
 }
-function begin(faction){mobileFusionMode=false;
+function begin(faction){
  gameMode=document.querySelector('input[name="gameMode"]:checked').value;
  localPlayer=1;
  const playerGoblin=faction==='Goblin';
@@ -543,7 +634,7 @@ function validTargets(side,i){
  const taunts=available.filter(j=>isSpecies(enemies[j],'Orc'));
  return taunts.length?taunts:available;
 }
-function attack(side,i,j){if(s.ended||s.active!==side||!canAttack(side,i))return false;triggerTrap(side,i,'attacked');if(!s[side].board[i]){render();return true}let a=s[side].board[i],targets=validTargets(side,i),def=other(side),d=s[def];if(j===null){if(targets.length)return false;d.hearts--;a.attacked=true;say(`${labelUnit(a)} strikes directly! ${def==='enemy'?'Opponent':'You'} lose a heart.`);checkEnd();render();return true}if(!targets.includes(j))return false;
+function attack(side,i,j){if(s.ended||s.active!==side||!canAttack(side,i))return false;triggerTrap(side,i,'attacked');if(!s[side].board[i]){render();return true}let a=s[side].board[i],targets=validTargets(side,i),def=other(side),d=s[def];if(j===null){if(targets.length)return false;tlAttackCue={side,lane:i};d.hearts--;a.attacked=true;say(`${labelUnit(a)} strikes directly! ${def==='enemy'?'Opponent':'You'} lose a heart.`);checkEnd();render();return true}if(!targets.includes(j))return false;tlAttackCue={side,lane:i};
 // Guard redirects attacks against neighboring units, once per turn.
 let guardIdx=d.board.findIndex((u,k)=>u&&hasClass(u,'Fighter')&&!u.guardUsed&&k!==j&&Math.abs(k-j)===1);if(guardIdx>=0){d.board[guardIdx].guardUsed=true;j=guardIdx;say('Fighter Guard intercepted the attack!')}
 let target=d.board[j];let spikeTarget=target.type==='Goblin Blockade';let damage=atk(a,side)+(hasClass(a,'Rogue')&&target.damage>0?1:0);damage=takeDamage(target,damage);a.attacked=true;a.boost=false;let targetName=labelUnit(target);
@@ -618,36 +709,53 @@ function checkEnd(){
  say(winner+' wins the match!');
  render();
 }
-let mobileFusionMode=false;
-function playerLane(i){if(mobileFusionMode&&s.active==='player'&&!s.ended&&s.player.board[i]){
- if(selection?.kind==='fusion'){
-  const from=selection.lane;
-  if(from===i){selection=null;say('Choose a creature to fuse.');render();return}
-  if(fusePair('player',from,i)){mobileFusionMode=false;updateMobileFuseButton();return}
-  say('Those creatures cannot fuse. Try another pair.');return;
- }
- selection={kind:'fusion',lane:i};say('Now tap the creature you want to fuse with '+labelUnit(s.player.board[i])+'.');render();return;
+
+function clearInvalidSelection(message='Selection cancelled: no valid interaction.'){
+ selection=null;say(message);render();
 }
-if(s.active!=='player'||s.ended)return;if(selection?.kind==='hand'){if(!play('player',selection.index,i))say('Invalid placement. Choose a compatible target or empty lane.');return}if(selection?.kind==='fusion'){
- const from=selection.lane;
- if(from===i){selection=null;say('Fusion selection cancelled.');render();return}
- if(!fusePair('player',from,i))say('Those creatures cannot fuse. Select a compatible creature.');
- return;
-}
-if(selection?.kind==='move'){if(!moveElf('player',selection.lane,i))say('Choose an adjacent empty lane for your Elf.');return}if(selection?.kind==='attacker'){say('Select an enemy card, or enemy hearts for a direct attack.');return}if(selection?.kind==='attacker'&&selection.lane===i){
- selection={kind:'fusion',lane:i};say('Tap another friendly creature to fuse, or tap the selected creature again to cancel.');render();return;
-}
-if(canAttack('player',i)){selection={kind:'attacker',lane:i};say(`Selected ${labelUnit(s.player.board[i])}. Choose an enemy in range, or attack hearts if no enemy is in range.`)}else if(s.player.board[i])say('That creature cannot attack yet or has already attacked.');else say('Select a card in your hand to summon here.');render()}
-function enemyLane(i){if(selection?.kind==='hand'&&['Fire Bolt','Goblin Trap','Sneak Attack','Ricochet Shot'].includes(s.player.hand[selection.index])){
-  if(!play('player',selection.index,i))say('Choose a valid target for the selected action.');
+function playerLane(i){
+ if(s.active!=='player'||s.ended)return;
+ if(selection?.kind==='hand'){
+  if(!play('player',selection.index,i))clearInvalidSelection();
   return;
- }if(selection?.kind==='attacker'){let result=s.enemy.board[i]?attack('player',selection.lane,i):(hasClass(s.player.board[selection.lane],'Warrior')?selection.lane===i:(Math.abs(selection.lane-i)<=1||hasClass(s.player.board[selection.lane],'Archer')))&&attack('player',selection.lane,null);if(!result)say('Attack blocked: choose an enemy in range, or an empty enemy lane when no enemy is in range.');selection=null;render()}}
-function onHand(i){if(s.active!=='player')return;selection={kind:'hand',index:i};let c=s.player.hand[i];if(['Tavern','Goblin Camp','Dungeon'].includes(c)){say('Click the center environment slot, or drag this card there.');render();return}if(actionCards.includes(c)){if(c==='Ricochet Shot'){say('Ricochet Shot: select an enemy creature. Requires an Archer; hits for 2 and an adjacent enemy for 1.');render();return}
+ }
+ if(selection?.kind==='unit'){
+  const from=selection.lane;
+  if(from===i){clearInvalidSelection('Selection cancelled.');return}
+  const source=s.player.board[from],target=s.player.board[i];
+  if(source&&((!target&&moveElf('player',from,i))||(target&&fusePair('player',from,i))))return;
+  clearInvalidSelection();return;
+ }
+ if(selection?.kind==='attacker'){
+  // Friendly targets cannot be attacked; cancel rather than trapping selection.
+  clearInvalidSelection();return;
+ }
+ if(s.player.board[i]){
+  selection={kind:'unit',lane:i};
+  say('Selected '+labelUnit(s.player.board[i])+'. Tap an adjacent empty lane to move an Elf, or a compatible creature to fuse. Drag to move or fuse too.');
+ }else{clearInvalidSelection('Select a card from your hand to summon.');return}
+ render();
+}
+function enemyLane(i){
+ if(selection?.kind==='hand'){
+  if(!['Fire Bolt','Goblin Trap','Sneak Attack','Ricochet Shot'].includes(s.player.hand[selection.index])||!play('player',selection.index,i))clearInvalidSelection();
+  return;
+ }
+ if(selection?.kind==='attacker'||selection?.kind==='unit'){
+  const from=selection.lane,unit=s.player.board[from];
+  const result=s.enemy.board[i]?attack('player',from,i):(unit&&(hasClass(unit,'Warrior')?from===i:(Math.abs(from-i)<=1||hasClass(unit,'Archer')))&&attack('player',from,null));
+  if(!result)clearInvalidSelection('Attack unavailable; selection cancelled.');
+  else{selection=null;render()}
+  return;
+ }
+ if(selection)clearInvalidSelection();
+}
+function onHand(i){if(s.active!=='player')return;if(selection?.kind==='hand'&&selection.index===i){clearInvalidSelection('Selection cancelled.');return}selection={kind:'hand',index:i};let c=s.player.hand[i];if(['Tavern','Goblin Camp','Dungeon'].includes(c)){say('Click the center environment slot, or drag this card there.');render();return}if(actionCards.includes(c)){if(c==='Ricochet Shot'){say('Ricochet Shot: select an enemy creature. Requires an Archer; hits for 2 and an adjacent enemy for 1.');render();return}
 if(c==='Fire Bolt'){say('Fire Bolt: choose an enemy creature. Requires a friendly Wizard.');render();return}if(c==='Sneak Attack'){say('Sneak Attack: choose an enemy creature. Requires a Rogue.');render();return}
 if(c==='Inspiration'){say('Inspiration: choose a friendly creature for +3 ATK this turn. Requires a Bard.');render();return}
-if(c==='Adventure Tactics'){if(!play('player',i))say('Adventure Tactics needs three different creatures on your field.');return}
-if(c==='Cleave'){if(!play('player',i))say('Cleave requires a Fighter and at least one enemy creature.');return}
-if(c==='Goblin Trap'){say('Goblin Trap: choose an empty enemy lane to set your trap.');render();return}play('player',i);return}say(c==='Potion'?'Click an injured friendly unit.':c in gear?'Click any adventurer to grant its class.':'Click an empty friendly lane to summon.');render()}
+if(c==='Adventure Tactics'){if(!play('player',i))clearInvalidSelection('Adventure Tactics needs three different creatures.');return}
+if(c==='Cleave'){if(!play('player',i))clearInvalidSelection('Cleave requires a Fighter and an enemy.');return}
+if(c==='Goblin Trap'){say('Goblin Trap: choose an empty enemy lane to set your trap.');render();return}if(!play('player',i))clearInvalidSelection();return}say(c==='Potion'?'Click an injured friendly unit.':c in gear?'Click any adventurer to grant its class.':'Click an empty friendly lane to summon.');render()}
 function doFuse(){if(s.active!=='player')return;
  
  let b=s.player.board,gs=b.map((u,i)=>isSpecies(u,'Goblin')?i:-1).filter(i=>i>=0);
@@ -732,13 +840,71 @@ function endTurn(){
  $('passOverlay').hidden=false;
 }
 $('passReady').onclick=()=>{$('passOverlay').hidden=true;render()};
-function cardElement(type,side,i,hand=false){let u=hand?null:s[side].board[i],b=document.createElement('button');b.className='card'+(selection&&(hand&&selection.kind==='hand'&&selection.index===i||!hand&&side==='player'&&selection.kind==='attacker'&&selection.lane===i)?' selected':'')+(u&&u.attacked?' exhausted':'');let name=document.createElement('div');name.className='name';name.textContent=u?labelUnit(u):type;let stats=document.createElement('div');stats.className='stats';stats.textContent=u?`${atk(u,side)} ATK · ${hp(u,side)}/${maxHp(u,side)} HP`:(P[type]?`${P[type].atk} ATK · ${P[type].hp} HP`:type==='Potion'?'HEAL 2':type in gear?'EQUIPMENT':actionCards.includes(type)?'ACTION':'ENVIRONMENT');let tag=document.createElement('div');tag.className='tag';tag.textContent=u?(u.attacked?'ATTACKED':s.turn===1?'WAITING':canAttack(side,i)?'READY':'WAITING'):(type in gear?'TRANSFORM':type==='Potion'?'CONSUMABLE':actionCards.includes(type)?'ACTION':type==='Tavern'||type==='Goblin Camp'||type==='Dungeon'?'FIELD':'SUMMON');let ability=document.createElement('div');ability.className='ability';ability.textContent=u&&u.className?((ABILITIES[u.species]||'')+' / '+(ABILITIES[u.className]||'')):(ABILITIES[type]||'');b.title='Hover or focus for full card details';b.setAttribute('aria-label',(u?labelUnit(u):type)+'. '+(u&&u.className?ABILITIES[u.species]+' '+ABILITIES[u.className]:ABILITIES[type]||''));b.append(name,stats,ability,tag);
+let touchDrag=null,ignoreNextClick=false;
+function setupTouchDrag(card,source){
+ card.addEventListener('pointerdown',ev=>{
+  if(ev.pointerType==='mouse'||ev.button!==0||s.active!=='player'||s.ended)return;
+  const rect=card.getBoundingClientRect();
+  touchDrag={source,id:ev.pointerId,x:ev.clientX,y:ev.clientY,rect,started:false,ghost:null};
+ },{passive:true});
+ card.addEventListener('pointermove',ev=>{
+  const d=touchDrag;if(!d||d.id!==ev.pointerId||d.source!==source)return;
+  if(!d.started&&Math.hypot(ev.clientX-d.x,ev.clientY-d.y)<11)return;
+  if(!d.started){
+   d.started=true;hideCardDetails();
+   const ghost=card.cloneNode(true);ghost.classList.add('touch-drag-ghost');
+   ghost.style.width=d.rect.width+'px';ghost.style.height=d.rect.height+'px';
+   document.body.append(ghost);d.ghost=ghost;
+   try{card.setPointerCapture(ev.pointerId)}catch(e){}
+  }
+  ev.preventDefault();
+  d.ghost.style.left=(ev.clientX-d.rect.width/2)+'px';
+  d.ghost.style.top=(ev.clientY-d.rect.height/2)+'px';
+  document.querySelectorAll('.touch-drop-target').forEach(el=>el.classList.remove('touch-drop-target'));
+  const el=document.elementFromPoint(ev.clientX,ev.clientY);
+  const target=el?.closest('.slot,.envslot,#enemyHearts');
+  if(target)target.classList.add('touch-drop-target');
+ },{passive:false});
+ const finish=(ev,cancelled=false)=>{
+  const d=touchDrag;if(!d||d.id!==ev.pointerId||d.source!==source)return;
+  touchDrag=null;
+  if(!d.started)return;
+  ignoreNextClick=true;setTimeout(()=>{ignoreNextClick=false},350);
+  d.ghost?.remove();
+  document.querySelectorAll('.touch-drop-target').forEach(el=>el.classList.remove('touch-drop-target'));
+  if(cancelled)return;
+  const el=document.elementFromPoint(ev.clientX,ev.clientY);
+  const slot=el?.closest('.slot');
+  if(source.kind==='hand'){
+   selection={kind:'hand',index:source.index};
+   if(slot){const lane=Array.from(slot.parentElement.children).indexOf(slot);const side=slot.parentElement.id==='playerBoard'?'player':'enemy';
+    if(!play('player',source.index,lane))clearInvalidSelection();
+   }else if(el?.closest('#sharedEnv')){if(!play('player',source.index,null))clearInvalidSelection()}
+   else clearInvalidSelection();
+  }else if(source.kind==='unit'){
+   if(slot&&slot.parentElement.id==='playerBoard'){
+    const lane=Array.from(slot.parentElement.children).indexOf(slot);
+    if(lane!==source.index&&((!s.player.board[lane]&&moveElf('player',source.index,lane))||(s.player.board[lane]&&fusePair('player',source.index,lane))))return;
+   }else if(slot&&slot.parentElement.id==='enemyBoard'){
+    const lane=Array.from(slot.parentElement.children).indexOf(slot);
+    const target=s.enemy.board[lane],u=s.player.board[source.index];
+    if(u&&(target?attack('player',source.index,lane):attack('player',source.index,null))){selection=null;render();return}
+   }else if(el?.closest('#enemyHearts')){
+    if(attack('player',source.index,null)){selection=null;render();return}
+   }
+   clearInvalidSelection();
+  }
+ };
+ card.addEventListener('pointerup',ev=>finish(ev));
+ card.addEventListener('pointercancel',ev=>finish(ev,true));
+}
+function cardElement(type,side,i,hand=false){let u=hand?null:s[side].board[i],b=document.createElement('button');b.className='card'+(selection&&(hand&&selection.kind==='hand'&&selection.index===i||!hand&&side==='player'&&['attacker','unit'].includes(selection.kind)&&selection.lane===i)?' selected':'')+(u&&u.attacked?' exhausted':'');let name=document.createElement('div');name.className='name';name.textContent=u?labelUnit(u):type;let stats=document.createElement('div');stats.className='stats';stats.textContent=u?`${atk(u,side)} ATK · ${hp(u,side)}/${maxHp(u,side)} HP`:(P[type]?`${P[type].atk} ATK · ${P[type].hp} HP`:type==='Potion'?'HEAL 2':type in gear?'EQUIPMENT':actionCards.includes(type)?'ACTION':'ENVIRONMENT');let tag=document.createElement('div');tag.className='tag';tag.textContent=u?(u.attacked?'ATTACKED':s.turn===1?'WAITING':canAttack(side,i)?'READY':'WAITING'):(type in gear?'TRANSFORM':type==='Potion'?'CONSUMABLE':actionCards.includes(type)?'ACTION':type==='Tavern'||type==='Goblin Camp'||type==='Dungeon'?'FIELD':'SUMMON');let ability=document.createElement('div');ability.className='ability';ability.textContent=u&&u.className?((ABILITIES[u.species]||'')+' / '+(ABILITIES[u.className]||'')):(ABILITIES[type]||'');b.title='Hover or focus for full card details';b.setAttribute('aria-label',(u?labelUnit(u):type)+'. '+(u&&u.className?ABILITIES[u.species]+' '+ABILITIES[u.className]:ABILITIES[type]||''));b.append(name,stats,ability,tag);
 let holdTimer=null;
  b.addEventListener('touchstart',()=>{holdTimer=setTimeout(()=>showCardDetails(b,type,u,side),450)},{passive:true});
  b.addEventListener('touchend',()=>{clearTimeout(holdTimer);setTimeout(hideCardDetails,1800)},{passive:true});
  b.addEventListener('touchcancel',()=>clearTimeout(holdTimer),{passive:true});
  b.addEventListener('mouseenter',()=>showCardDetails(b,type,u,side));b.addEventListener('mouseleave',hideCardDetails);
-b.addEventListener('focus',()=>showCardDetails(b,type,u,side));b.addEventListener('blur',hideCardDetails);b.onclick=()=>hand?onHand(i):side==='player'?playerLane(i):enemyLane(i);
+b.addEventListener('focus',()=>showCardDetails(b,type,u,side));b.addEventListener('blur',hideCardDetails);b.onclick=()=>{if(ignoreNextClick)return;hand?onHand(i):side==='player'?playerLane(i):enemyLane(i)};if(side==='player')setupTouchDrag(b,{kind:hand?'hand':'unit',index:i});
 if(!hand&&side==='player'&&u){
  b.draggable=true;
  b.addEventListener('dragstart',ev=>{ev.dataTransfer.setData('application/x-three-unit',String(i));ev.dataTransfer.effectAllowed='move';b.classList.add('dragging')});
@@ -755,13 +921,54 @@ if(unit!==''){
  return;
 }
 const raw=ev.dataTransfer.getData('text/plain');if(raw==='')return;
-const idx=Number(raw);if(Number.isInteger(idx)&&idx>=0&&!play('player',idx,i))say('Invalid placement for that card.');})}
+const idx=Number(raw);if(Number.isInteger(idx)&&idx>=0&&!play('player',idx,i))clearInvalidSelection();})}
 if(s[side].traps[i]&&side==='enemy'){let marker=document.createElement('div');marker.className='trap-marker';marker.textContent=side==='enemy'?'⚠ TRAP':'?';marker.title=side==='player'?'A trap is armed in this lane':'Unknown trap';slot.append(marker)}
 if(u)slot.append(cardElement(u.type,side,i));else{let empty=document.createElement('button');empty.className='empty'+(side==='enemy'?' enemy-target':'');empty.textContent=side==='enemy'?`LANE ${i+1} · ♥ TARGET`:`LANE ${i+1} · EMPTY`;empty.onclick=()=>side==='player'?playerLane(i):enemyLane(i);slot.append(empty)}el.append(slot)})}
-function updateMobileFuseButton(){
- const btn=$('mobileFuse');if(btn){btn.classList.toggle('selected',mobileFusionMode);btn.setAttribute('aria-pressed',String(mobileFusionMode));btn.textContent=mobileFusionMode?'CANCEL FUSION':'TAP TO FUSE';}
+let tlPreviousBoard=null;
+let tlAttackCue=null;
+function tlBoardSnapshot(){
+ return ['player','enemy'].map(side=>s[side].board.map(u=>u?{type:u.type,species:u.species,hp:hp(u,side),damage:u.damage,className:u.className}:null));
 }
-function render(){hideCardDetails();updateMobileFuseButton();renderBoard('player');renderBoard('enemy');for(let side of ['player','enemy']){$(side+'Hearts').textContent='♥ '.repeat(Math.max(0,s[side].hearts))+'♡ '.repeat(3-Math.max(0,s[side].hearts));$(side+'Deck').textContent=` · HAND ${s[side].hand.length} · DISCARD ${s[side].discard.length}`;$(side+'DeckCount').textContent=s[side].deck.length;}
+function tlCaptureDeaths(before,after){
+ if(!before)return;
+ ['player','enemy'].forEach((side,si)=>{
+  const root=$(side+'Board');
+  before[si].forEach((old,i)=>{
+   if(!old||after[si][i])return;
+   const card=root.children[i]?.querySelector('.card');
+   if(!card)return;
+   const rect=card.getBoundingClientRect();
+   if(!rect.width||!rect.height)return;
+   const ghost=card.cloneNode(true);
+   ghost.classList.remove('tl-attack','tl-damage','tl-summon');
+   ghost.classList.add('tl-death-ghost');
+   Object.assign(ghost.style,{left:rect.left+'px',top:rect.top+'px',width:rect.width+'px',height:rect.height+'px',margin:'0'});
+   document.body.append(ghost);
+   setTimeout(()=>ghost.remove(),600);
+  });
+ });
+}
+function tlAnimateBoard(before,after){
+ ['player','enemy'].forEach((side,si)=>after[si].forEach((now,i)=>{
+  if(!now)return;
+  const prev=before?.[si]?.[i];
+  const card=$(side+'Board').children[i]?.querySelector('.card');
+  if(!card)return;
+  let effect=null;
+  if(!prev||prev.type!==now.type||prev.className!==now.className)effect='tl-summon';
+  else if(now.hp<prev.hp||now.damage>prev.damage)effect='tl-damage';
+  if(tlAttackCue&&tlAttackCue.side===side&&tlAttackCue.lane===i)effect='tl-attack';
+  if(effect){card.classList.add(effect);setTimeout(()=>card.classList.remove(effect),550)}
+ }));
+ tlAttackCue=null;
+}
+function render(){
+ hideCardDetails();
+ const tlNow=tlBoardSnapshot();
+ tlCaptureDeaths(tlPreviousBoard,tlNow);
+ renderBoard('player');renderBoard('enemy');
+ tlAnimateBoard(tlPreviousBoard,tlNow);
+ tlPreviousBoard=tlNow;for(let side of ['player','enemy']){$(side+'Hearts').textContent='♥ '.repeat(Math.max(0,s[side].hearts))+'♡ '.repeat(3-Math.max(0,s[side].hearts));$(side+'Deck').textContent=` · HAND ${s[side].hand.length} · DISCARD ${s[side].discard.length}`;$(side+'DeckCount').textContent=s[side].deck.length;}
 let e=$('sharedEnv');e.innerHTML='';
 
 let a=document.createElement('span');a.textContent='SHARED ENVIRONMENT · ONE SLOT';e.append(a);let strong=document.createElement('strong');strong.textContent=s.env?`${s.env} — ${s.envOwner==='player'?'YOUR EFFECT':'ENEMY EFFECT'}`:'— EMPTY —';e.append(strong);
@@ -769,19 +976,19 @@ document.querySelector('#enemyBoard').previousElementSibling.textContent='OPPONE
 document.querySelector('#playerBoard').previousElementSibling.textContent='YOUR FIELD · '+(s.player.faction==='Human'?'ADVENTURER':s.player.faction.toUpperCase());
 document.querySelector('.status h2').textContent=(s.enemy.faction==='Human'?'ADVENTURER':s.enemy.faction.toUpperCase())+(gameMode==='pvp'?' · OTHER PLAYER':' · OPPONENT');
 document.querySelectorAll('.status h2')[1].textContent=(s.player.faction==='Human'?'ADVENTURER':s.player.faction.toUpperCase())+(gameMode==='pvp'?' · PLAYER '+localPlayer:' · PLAYER');
-let hand=$('hand');hand.innerHTML='';s.player.hand.forEach((c,i)=>hand.append(cardElement(c,'player',i,true)));$('handCount').textContent=`(${s.player.hand.length} cards)`;$('turnInfo').textContent=`TURN ${s.turn} · ${s.ended?'GAME OVER':s.active==='player'?'YOUR MOVE':'ENEMY MOVE'}`;$('end').disabled=s.active!=='player'||s.ended;$('fuse').disabled=s.active!=='player'||s.ended;$('moveElf').disabled=s.active!=='player'||s.ended;$('enemyHearts').style.cursor='pointer';if(gameMode==='online'&&!onlineReceiving&&onlineConnected&&$('coinOverlay').hidden)onlineQueueSync()}
-$('enemyHearts').onclick=()=>{if(selection?.kind==='attacker'){let i=selection.lane;if(!attack('player',i,null))say('Direct attack blocked by an enemy in range.');selection=null;render()}};const mobileFuseButton=document.createElement('button');
-mobileFuseButton.id='mobileFuse';mobileFuseButton.type='button';mobileFuseButton.textContent='TAP TO FUSE';
-mobileFuseButton.setAttribute('aria-pressed','false');
-mobileFuseButton.onclick=()=>{mobileFusionMode=!mobileFusionMode;selection=null;updateMobileFuseButton();say(mobileFusionMode?'Tap one friendly creature, then another to fuse them.':'Fusion mode cancelled.');render()};
-$('fuse').insertAdjacentElement('afterend',mobileFuseButton);
-const envSlot=$('sharedEnv');
+let hand=$('hand');hand.innerHTML='';s.player.hand.forEach((c,i)=>hand.append(cardElement(c,'player',i,true)));$('handCount').textContent=`(${s.player.hand.length} cards)`;$('turnInfo').textContent=`TURN ${s.turn} · ${s.ended?'GAME OVER':s.active==='player'?'YOUR MOVE':'ENEMY MOVE'}`;$('end').disabled=s.active!=='player'||s.ended;$('enemyHearts').style.cursor='pointer';if(gameMode==='online'&&!onlineReceiving&&onlineConnected&&$('coinOverlay').hidden)onlineQueueSync()}
+$('enemyHearts').onclick=()=>{if(selection?.kind==='hand'||selection?.kind==='unit'){clearInvalidSelection();return}if(selection?.kind==='attacker'){let i=selection.lane;if(!attack('player',i,null))say('Direct attack blocked by an enemy in range.');selection=null;render()}};const envSlot=$('sharedEnv');
 envSlot.addEventListener('click',()=>{if(selection?.kind==='hand'){let idx=selection.index;if(!play('player',idx,null))say('Only an environment card can go here.')}});
 envSlot.addEventListener('dragover',ev=>{ev.preventDefault();envSlot.classList.add('drag-over')});
 envSlot.addEventListener('dragleave',()=>envSlot.classList.remove('drag-over'));
 envSlot.addEventListener('drop',ev=>{ev.preventDefault();envSlot.classList.remove('drag-over');let idx=Number(ev.dataTransfer.getData('text/plain'));if(!play('player',idx,null))say('Only environment cards can go in the center.')});
+const sideMenuTab=$('sideMenuTab');
+const sideMenuItems=$('sideMenuItems');
+function setSideMenu(open){sideMenuItems.hidden=!open;sideMenuTab.setAttribute('aria-expanded',String(open));}
+sideMenuTab.onclick=()=>setSideMenu(sideMenuItems.hidden);
 function setPanel(panelName,open){
  hideCardDetails();
+ if(open)setSideMenu(false);
  for(const [panel,toggle] of [['guidePanel','guideToggle'],['howPanel','howToggle'],['trackerPanel','trackerToggle']]){
   const visible=panel===panelName&&open;
   $(panel).classList.toggle('open',visible);
@@ -867,7 +1074,7 @@ $('gameOverNewGame').onclick=()=>{$('restart').click()};
 $('restart').onclick=()=>{$('gameOverOverlay').hidden=true;$('startOverlay').hidden=false;$('coinOverlay').hidden=true;$('passOverlay').hidden=true;$('equipmentOverlay').hidden=true;setGuide(false)};
 $('chooseHuman').onclick=()=>{if(document.querySelector('input[name="gameMode"]:checked').value==='online'){onlineStatus('For online games, choose your deck in the online lobby and use HOST or JOIN.');return}$('customToggle').checked?setupBuilder('Human'):begin('Human')};
 $('chooseGoblin').onclick=()=>{if(document.querySelector('input[name="gameMode"]:checked').value==='online'){onlineStatus('For online games, choose your deck in the online lobby and use HOST or JOIN.');return}$('customToggle').checked?setupBuilder('Goblin'):begin('Goblin')};
-$('chooseDungeon').onclick=()=>{if(document.querySelector('input[name="gameMode"]:checked').value==='online'){onlineStatus('For online games, choose your deck in the online lobby and use HOST or JOIN.');return}$('customToggle').checked?setupBuilder('Dungeon'):begin('Dungeon')};$('cancel').onclick=()=>{selection=null;say('Selection cleared.');render()};$('fuse').onclick=doFuse;$('moveElf').onclick=()=>{if(s.active!=='player')return;let i=s.player.board.findIndex(u=>isSpecies(u,'Elf')&&!u.moved&&[i-1,i+1].some(j=>j>=0&&j<3&&!s.player.board[j]));if(i<0){say('No Elf can move into an adjacent empty lane.');return}selection={kind:'move',lane:i};say('Select an adjacent empty friendly lane to move your '+labelUnit(s.player.board[i])+'.');render()};$('end').onclick=endTurn;
+$('chooseDungeon').onclick=()=>{if(document.querySelector('input[name="gameMode"]:checked').value==='online'){onlineStatus('For online games, choose your deck in the online lobby and use HOST or JOIN.');return}$('customToggle').checked?setupBuilder('Dungeon'):begin('Dungeon')};$('cancel').onclick=()=>{selection=null;say('Selection cleared.');render()};$('end').onclick=endTurn;
 
 // Online play uses PeerJS's free public signaling server. The peer connection
 // carries state directly; there is no permanent database or matchmaking.
@@ -880,6 +1087,7 @@ function onlineWaiting(title,msg){
  $('onlineWaiting').hidden=false;$('onlineWaitTitle').textContent=title;$('onlineWaitText').textContent=msg;
 }
 function onlineUpdateWait(){
+ $('onlineLeave').hidden=!(gameMode==='online'&&onlineConnected);
  if(gameMode!=='online'||!s||s.ended){$('onlineWaiting').hidden=true;return}
  if(s.active==='player'){$('onlineWaiting').hidden=true;return}
  onlineWaiting('OPPONENT’S TURN','Your opponent is making their move. The battlefield will update automatically.');
@@ -920,7 +1128,7 @@ function onlineOnData(msg){
  if(msg.type==='state'&&msg.state&&onlineRole==='host'){
   onlineReceiveState(msg);return;
  }
- if(msg.type==='leave'){onlineStatus('Opponent disconnected.');onlineWaiting('OPPONENT DISCONNECTED','Your opponent has left the match.');onlineConnected=false}
+ if(msg.type==='leave'){onlineStatus('Opponent disconnected.');onlineWaiting('OPPONENT DISCONNECTED','Your opponent has left the match.');onlineConnected=false;$('onlineLeave').hidden=true}
 }
 function onlineReceiveState(msg){
  if(!msg.state||!msg.state.player||!msg.state.enemy||!Array.isArray(msg.state.player.board))return;
@@ -928,7 +1136,7 @@ function onlineReceiveState(msg){
  gameMode='online';
  s=onlineSwapState(msg.state);
  logs=Array.isArray(msg.logs)?msg.logs.slice(0,12):[];
- selection=null;mobileFusionMode=false;
+ selection=null;
  $('startOverlay').hidden=true;$('coinOverlay').hidden=true;$('passOverlay').hidden=true;
  $('equipmentOverlay').hidden=true;$('dungeonRewardOverlay').hidden=true;
  $('message').textContent=logs[0]||'Online match updated.';
@@ -946,15 +1154,18 @@ function onlineReceiveState(msg){
 function onlineClose(){
  try{if(onlineConn?.open)onlineConn.send({type:'leave'})}catch(e){}
  try{onlineConn?.close();onlinePeer?.destroy()}catch(e){}
- onlineConn=null;onlinePeer=null;onlineConnected=false;onlineRole=null;onlineVersion=0;
+ onlineConn=null;onlinePeer=null;onlineConnected=false;onlineRole=null;onlineVersion=0;$('onlineLeave').hidden=true;
  $('onlineStart').hidden=true;$('onlineRoom').hidden=true;$('onlineWaiting').hidden=true;
  onlineStatus('Disconnected. Create or join a new room.');
 }
-$('onlineLeave').onclick=()=>{onlineClose();$('restart').click()};
+$('onlineLeave').onclick=()=>{
+ if(!confirm('Leave this online match? Your opponent will be disconnected.'))return;
+ onlineClose();setSideMenu(false);$('restart').click();
+};
 function onlineBindConnection(conn){
  onlineConn=conn;
  conn.on('open',()=>{
-  onlineConnected=true;
+  onlineConnected=true;$('onlineLeave').hidden=false;
   if(onlineRole==='guest'){
    conn.send({type:'deck',deck:$('onlineDeck').value});
    onlineStatus('Connected! Waiting for the host to start the match.');
@@ -962,7 +1173,7 @@ function onlineBindConnection(conn){
   }else onlineStatus('Guest connected. Waiting for their deck selection.');
  });
  conn.on('data',onlineOnData);
- conn.on('close',()=>{if(!onlineRole)return;onlineConnected=false;onlineWaiting('CONNECTION LOST','The other player disconnected. Leave the match and try again.');onlineStatus('Connection closed.')});
+ conn.on('close',()=>{if(!onlineRole)return;onlineConnected=false;$('onlineLeave').hidden=true;onlineWaiting('CONNECTION LOST','The other player disconnected. Leave the match and try again.');onlineStatus('Connection closed.')});
  conn.on('error',e=>onlineStatus('Connection error: '+e.message));
 }
 function onlineCreatePeer(id,callback){
